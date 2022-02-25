@@ -16,12 +16,15 @@ class Post(models.Model):
     posted_by = models.CharField(max_length=50, default="root")
     posted_at = models.DateTimeField(editable=False)    # "auto-fill" moved to save() override
     edited_at = models.DateTimeField(editable=False)    # editable=False from auto_now, but this time without the UTC confusion.
+    visits = models.IntegerField(default=0, editable=False)
 
     def __str__(self):
         return self.title
 
-    def save(self, *args, **kwargs):
+    # @param new_visit: Boolean value representing a unique blog post visit
+    def save(self, new_visit=False, *args, **kwargs):
         if not self.id:                                     # on create, set posted time to current time
             self.posted_at = timezone.now().astimezone()
-        self.edited_at = timezone.now().astimezone()        # on update, set edit time to current time
+        if not new_visit:                                   # to ensure edited_at isn't overwritten on new visit
+            self.edited_at = timezone.now().astimezone()        # on update, set edit time to current time
         return super(Post, self).save(*args, **kwargs)
